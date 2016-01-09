@@ -1,9 +1,11 @@
 # google-scholar-citations
-To retrieve all of your citations from Google Scholar.
+To retrieve all your citations from Google Scholar.
 
 ## Usage
 ```bash
-$ ./google-scholar-citations
+# set parameters, e.g. your Google Scholar homepage
+$ vim myconfig.py
+$ ./main.py
 ```
 
 ## Prerequisite
