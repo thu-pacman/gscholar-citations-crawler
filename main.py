@@ -16,7 +16,7 @@ citation_num = 0
 download_num = 0
 
 def get_all_citations():
-    logging.debug("Processing GOOGLE_SCHOLAR_URI: " + myconfig.google_scholar_uri)
+    logging.info("Processing GOOGLE_SCHOLAR_URI: " + myconfig.google_scholar_uri)
     req = urllib2.Request(myconfig.google_scholar_uri, headers=REQUEST_HEADERS)
     page = urllib2.urlopen(req)
     soup = BeautifulSoup(page)
@@ -27,10 +27,9 @@ def get_all_citations():
         if citations_anchor['href']:
             get_citations_by_paper(citations_anchor['href'], int(citations_anchor.getText()))
         else:
-            logging.info("Current paper has not been cited.")
+            logging.warn("Current paper has not been cited.")
 
 def get_citations_by_paper(citations_uri, count):
-    logging.debug("Processing citations_uri: " + citations_uri)
     citations_uri_template = citations_uri + "&start=%d"
     for c in range(0, int(math.ceil(count / 10.0))):
         curr_citations_uri = citations_uri_template % (c * 10)
@@ -48,7 +47,7 @@ def save_citation(citation_record):
     title = citation_info.h3.a.renderContents()
     citation_num = citation_num + 1
     with open("citation.txt", "a+") as f:
-        f.write("[%d]" % citation_num + " " + title + '\n')
+        f.write("[%d] %s\n" % (citation_num, title))
     if myconfig.should_download:
         pdf_div = citation_record.find('div', {"class":"gs_ggs gs_fl"})
         if pdf_div:
@@ -62,6 +61,7 @@ def download_pdf(pdf_uri):
         with open("%d.pdf" % citation_num, "wb") as mypdf:
             mypdf.write(pdf.read())
         download_num = download_num + 1
+        logging.info("Downloaded citation [%d] from link %s " % (citation_num, pdf_uri))
     except urllib2.URLError as err:
         logging.error("Can't download link: " + pdf_uri + " Error: " +str(err.reason))
     finally:
@@ -71,7 +71,7 @@ def download_pdf(pdf_uri):
 def main():
     reload(sys)
     sys.setdefaultencoding('utf-8')
-    logging.basicConfig(filename = 'citation.log', filemode = 'w+', level = logging.DEBUG)
+    logging.basicConfig(level = logging.DEBUG)
     get_all_citations()
     logging.info("Found %d citations and download %d files" % (citation_num, download_num))
 
