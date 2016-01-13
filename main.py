@@ -43,19 +43,30 @@ def get_citations_by_paper(citations_uri, count):
         time.sleep(SLEEP_INTERVAL)
 
 def save_citation(citation_record):
-    global citation_num, download_num
+    global citation_num
     citation_info = citation_record.find('div', {"class":"gs_ri"})
     title = citation_info.h3.a.renderContents()
     citation_num = citation_num + 1
     with open("citation.txt", "a+") as f:
         f.write("[%d]" % citation_num + " " + title + '\n')
     if myconfig.should_download:
-        pdf_uri = citation_record.find('div', {"class":"gs_ggs gs_fl"}).a['href']
-        if pdf_uri:
-            pdf = urllib2.urlopen(pdf_uri)
-            with open("%d.pdf" % citation_num, "wb") as mypdf:
-                mypdf.write(pdf.read())
-            download_num = download_num + 1
+        pdf_div = citation_record.find('div', {"class":"gs_ggs gs_fl"})
+        if pdf_div:
+            download_pdf(pdf_div.a['href'])
+
+def download_pdf(pdf_uri):
+    global citation_num, download_num
+    pdf = None
+    try:
+        pdf = urllib2.urlopen(pdf_uri)
+        with open("%d.pdf" % citation_num, "wb") as mypdf:
+            mypdf.write(pdf.read())
+        download_num = download_num + 1
+    except urllib2.URLError as err:
+        logging.error("Can't download link: " + pdf_uri + " Error: " +str(err.reason))
+    finally:
+        if pdf:
+            pdf.close()
 
 def main():
     reload(sys)
