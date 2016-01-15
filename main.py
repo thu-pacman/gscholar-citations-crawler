@@ -11,6 +11,7 @@ import myconfig
 
 REQUEST_HEADERS = {"User-Agent":"Innocent Browser", "Accept-Charset":"UTF-8,*;q=0.5"}
 SLEEP_INTERVAL = 10 # sleep in seconds before next request
+CITATION_FILENAME = "citation.txt"
 
 citation_num = 0
 download_num = 0
@@ -22,9 +23,12 @@ def get_all_citations():
     soup = BeautifulSoup(page)
     paper_records = soup("tr", {"class":'gsc_a_tr'})
     for p in paper_records:
-        logging.info("Processing paper: " + p.find('a', {"class":"gsc_a_at"}).getText())
+        paper_title = p.find('a', {"class":"gsc_a_at"}).getText()
+        logging.info("Processing paper: " + paper_title)
         citations_anchor = p.find('a', {"class":'gsc_a_ac'})
         if citations_anchor['href']:
+            with open(CITATION_FILENAME, "a+") as f:
+                f.write("# %s\n" % paper_title)
             get_citations_by_paper(citations_anchor['href'], int(citations_anchor.getText()))
         else:
             logging.warn("Current paper has not been cited.")
@@ -46,7 +50,7 @@ def save_citation(citation_record):
     citation_info = citation_record.find('div', {"class":"gs_ri"})
     title = citation_info.h3.a.renderContents()
     citation_num = citation_num + 1
-    with open("citation.txt", "a+") as f:
+    with open(CITATION_FILENAME, "a+") as f:
         f.write("[%d] %s\n" % (citation_num, title))
     if myconfig.should_download:
         pdf_div = citation_record.find('div', {"class":"gs_ggs gs_fl"})
