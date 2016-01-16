@@ -17,21 +17,37 @@ citation_num = 0
 download_num = 0
 
 def get_all_citations():
-    logging.info("Processing GOOGLE_SCHOLAR_URI: " + myconfig.google_scholar_uri)
+    total_citations_num = get_total_citations_num()
+    papers_per_page = 20
+    paper_uri_template = myconfig.google_scholar_uri + "&cstart=%d&pagesize=%d"
+    for c in range(0, int(math.ceil(total_citations_num * 1.0 / papers_per_page))):
+        paper_uri = paper_uri_template % (papers_per_page * c, papers_per_page)
+        logging.info("Processing GOOGLE_SCHOLAR_URI: " + paper_uri)
+        req = urllib2.Request(paper_uri, headers=REQUEST_HEADERS)
+        page = urllib2.urlopen(req)
+        soup = BeautifulSoup(page)
+        paper_records = soup("tr", {"class":'gsc_a_tr'})
+        for p in paper_records:
+            paper_title = p.find('a', {"class":"gsc_a_at"}).getText()
+            logging.info("Processing paper: " + paper_title)
+            citations_anchor = p.find('a', {"class":'gsc_a_ac'})
+            if citations_anchor['href']:
+                with open(CITATION_FILENAME, "a+") as f:
+                    f.write("# %s\n" % paper_title)
+                get_citations_by_paper(citations_anchor['href'], int(citations_anchor.getText()))
+            else:
+                logging.warn("Current paper has not been cited.")
+
+def get_total_citations_num():
+    """
+    Get the total citation number from user's google scholar homepage
+    """
     req = urllib2.Request(myconfig.google_scholar_uri, headers=REQUEST_HEADERS)
     page = urllib2.urlopen(req)
     soup = BeautifulSoup(page)
-    paper_records = soup("tr", {"class":'gsc_a_tr'})
-    for p in paper_records:
-        paper_title = p.find('a', {"class":"gsc_a_at"}).getText()
-        logging.info("Processing paper: " + paper_title)
-        citations_anchor = p.find('a', {"class":'gsc_a_ac'})
-        if citations_anchor['href']:
-            with open(CITATION_FILENAME, "a+") as f:
-                f.write("# %s\n" % paper_title)
-            get_citations_by_paper(citations_anchor['href'], int(citations_anchor.getText()))
-        else:
-            logging.warn("Current paper has not been cited.")
+    total_citations_num = int(soup("td", {"class":"gsc_rsb_std"})[0].getText())
+    logging.info("Total citations number: %d" % total_citations_num)
+    return total_citations_num
 
 def get_citations_by_paper(citations_uri, count):
     citations_uri_template = citations_uri + "&start=%d"
