@@ -6,6 +6,7 @@ import urllib2
 import time
 from BeautifulSoup import BeautifulSoup
 import logging
+import HTMLParser
 
 import myconfig
 
@@ -15,6 +16,8 @@ CITATION_FILENAME = "citation.txt"
 
 citation_num = 0
 download_num = 0
+
+html_parser = HTMLParser.HTMLParser()
 
 def get_all_citations():
     total_citations_num = get_total_citations_num()
@@ -62,12 +65,22 @@ def get_citations_by_paper(citations_uri, count):
         time.sleep(SLEEP_INTERVAL)
 
 def save_citation(citation_record):
+    CITE_DETAIL_URL_TEMPLATE = "https://scholar.google.com/scholar?q=info:%(id)s:scholar.google.com/&output=cite&scirp=0"
+    cite_anchor = citation_record.find('a', {'class' : 'gs_nph', 'href' : '#', "role":"button"})
+    if not cite_anchor:
+        return
+    citation_id = cite_anchor['onclick'].split(',')[1][1:-1]
+    cite_detail_url = CITE_DETAIL_URL_TEMPLATE % {"id" : citation_id}
+    logging.info("Getting formated cite from " + cite_detail_url)
+    req = urllib2.Request(cite_detail_url, headers = REQUEST_HEADERS)
+    page = urllib2.urlopen(req)
+    soup = BeautifulSoup(page)
+    global html_parser
+    full_cite = html_parser.unescape(soup.find("div", {"id":"gs_cit0"}).text)
     global citation_num
-    citation_info = citation_record.find('div', {"class":"gs_ri"})
-    title = citation_info.h3.a.renderContents()
     citation_num = citation_num + 1
     with open(CITATION_FILENAME, "a+") as f:
-        f.write("[%d] %s\n" % (citation_num, title))
+        f.write("[%d] %s\n" % (citation_num, full_cite))
     if myconfig.should_download:
         pdf_div = citation_record.find('div', {"class":"gs_ggs gs_fl"})
         if pdf_div:
