@@ -62,7 +62,7 @@ def get_citations_by_paper(citations_uri, count):
         soup = BeautifulSoup(page)
         for citation_record in soup('div', {"class":"gs_r"}):
             save_citation(citation_record)
-        time.sleep(SLEEP_INTERVAL)
+            time.sleep(SLEEP_INTERVAL)
 
 def save_citation(citation_record):
     CITE_DETAIL_URL_TEMPLATE = "https://scholar.google.com/scholar?q=info:%(id)s:scholar.google.com/&output=cite&scirp=0"
