@@ -7,6 +7,7 @@ import time
 from BeautifulSoup import BeautifulSoup
 import logging
 import HTMLParser
+import os.path
 
 import myconfig
 
@@ -19,10 +20,37 @@ download_num = 0
 
 html_parser = HTMLParser.HTMLParser()
 
+def get_start_citation_num():
+    global CITATION_FILENAME
+    if not os.path.exists(CITATION_FILENAME):
+        return 1
+    with open(CITATION_FILENAME, 'r') as f:
+        citation_list = f.readlines()
+        last_line = citation_list[-1]
+        i = len(citation_list) - 1
+        while i > -1:
+            if citation_list[i][0] != '[':
+                i = i - 1
+            else:
+                break
+        if i < 0:
+            return 1
+        last_line = citation_list[i]
+        start_number = int(last_line[1:last_line.index(']')])
+        logging.info('Start from citation [%d] ' % start_number)
+        return start_number
+
+
 def get_all_citations():
     total_citations_num = get_total_citations_num()
+    start_citation_num = get_start_citation_num()
+    if start_citation_num > total_citations_num:
+        logging.error("Unexpected start citation number: %d, total citations number: %d" % (start_citation_num, total_citations_num))
+        sys.exit(2)
     papers_per_page = 20
     paper_uri_template = myconfig.google_scholar_uri + "&cstart=%d&pagesize=%d"
+    citation_num_bynow = 0
+    continued = False
     for c in range(0, int(math.ceil(total_citations_num * 1.0 / papers_per_page))):
         paper_uri = paper_uri_template % (papers_per_page * c, papers_per_page)
         logging.info("Processing GOOGLE_SCHOLAR_URI: " + paper_uri)
@@ -33,9 +61,18 @@ def get_all_citations():
             logging.info("Processing paper: " + paper_title)
             citations_anchor = p.find('a', {"class":'gsc_a_ac'})
             if citations_anchor['href']:
-                with open(CITATION_FILENAME, "a+") as f:
-                    f.write("# %s\n" % paper_title)
-                get_citations_by_paper(citations_anchor['href'], int(citations_anchor.getText()))
+                citation_num_perpaper = int(citations_anchor.getText())
+                citation_num_bynow = citation_num_bynow + citation_num_perpaper
+                if continued:
+                    with open(CITATION_FILENAME, "a+") as f:
+                        f.write("# %s\n" % paper_title)
+                    get_citations_by_paper(citations_anchor['href'], citation_num_perpaper, 0)
+
+                elif citation_num_bynow > start_citation_num:
+                    start_index_curr_paper = citation_num_perpaper - (citation_num_bynow - start_citation_num)
+                    logging.debug('Continue from paper: %s, start index: %d' % (paper_title, start_index_curr_paper))
+                    get_citations_by_paper(citations_anchor['href'], citation_num_perpaper, start_index_curr_paper)
+                    continued = True
             else:
                 logging.warn("Current paper has not been cited.")
 
@@ -48,12 +85,11 @@ def get_total_citations_num():
     logging.info("Total citations number: %d" % total_citations_num)
     return total_citations_num
 
-def get_citations_by_paper(citations_uri, count):
-    logging.debug("citations_uri: %s count: %d" % (citations_uri, count))
+def get_citations_by_paper(citations_uri, count, start_index):
     citations_uri_template = citations_uri + "&start=%d"
-    for c in range(0, int(math.ceil(count / 10.0))):
-        curr_citations_uri = citations_uri_template % (c * 10)
-        logging.debug("Processing citations_uri: " + curr_citations_uri)
+    for c in range(0, int(math.ceil((count - start_index) / 10.0))):
+        curr_citations_uri = citations_uri_template % (c * 10 + start_index)
+        logging.debug("Processing citations_uri:" + curr_citations_uri)
         soup = create_soup_by_url(curr_citations_uri)
         for citation_record in soup('div', {"class":"gs_r"}):
             save_citation(citation_record)
@@ -92,7 +128,6 @@ def download_pdf(pdf_uri):
     finally:
         if pdf:
             pdf.close()
-
 
 def create_soup_by_url(page_url):
     req = urllib2.Request(page_url, headers = REQUEST_HEADERS)
