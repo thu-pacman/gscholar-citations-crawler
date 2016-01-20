@@ -42,10 +42,11 @@ def get_start_citation_num():
 
 
 def get_all_citations():
+    global citation_num
     total_citations_num = get_total_citations_num()
-    start_citation_num = get_start_citation_num()
-    if start_citation_num > total_citations_num:
-        logging.error("Unexpected start citation number: %d, total citations number: %d" % (start_citation_num, total_citations_num))
+    citation_num = get_start_citation_num()
+    if citation_num > total_citations_num:
+        logging.error("Unexpected start citation number: %d, total citations number: %d" % (citation_num, total_citations_num))
         sys.exit(2)
     papers_per_page = 20
     paper_uri_template = myconfig.google_scholar_uri + "&cstart=%d&pagesize=%d"
@@ -68,8 +69,8 @@ def get_all_citations():
                         f.write("# %s\n" % paper_title)
                     get_citations_by_paper(citations_anchor['href'], citation_num_perpaper, 0)
 
-                elif citation_num_bynow > start_citation_num:
-                    start_index_curr_paper = citation_num_perpaper - (citation_num_bynow - start_citation_num)
+                elif citation_num_bynow > citation_num:
+                    start_index_curr_paper = citation_num_perpaper - (citation_num_bynow - citation_num)
                     logging.debug('Continue from paper: %s, start index: %d' % (paper_title, start_index_curr_paper))
                     get_citations_by_paper(citations_anchor['href'], citation_num_perpaper, start_index_curr_paper)
                     continued = True
