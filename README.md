@@ -9,4 +9,4 @@ $ ./main.py
 ```
 
 ## Prerequisite
-* Python with BeautifulSoup
+* Python 2.7 with BeautifulSoup
