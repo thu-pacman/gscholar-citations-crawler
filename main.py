@@ -3,6 +3,7 @@
 import sys
 import math
 import urllib2
+import requests
 import time
 from BeautifulSoup import BeautifulSoup
 import logging
@@ -19,7 +20,7 @@ citation_num = 0
 download_num = 0
 
 html_parser = HTMLParser.HTMLParser()
-
+session = requests.Session()
 
 def get_start_citation_num():
     global CITATION_FILENAME
@@ -137,12 +138,12 @@ def download_pdf(pdf_uri):
 
 
 def create_soup_by_url(page_url):
-    req = urllib2.Request(page_url, headers=REQUEST_HEADERS)
+    global session
     page = None
     try:
         time.sleep(SLEEP_INTERVAL)
-        page = urllib2.urlopen(req)
-        soup = BeautifulSoup(page)
+        res = session.get(page_url, headers=REQUEST_HEADERS)
+        soup = BeautifulSoup(res.content)
         if soup.h1 and soup.h1.text and soup.h1.text == "Please show you&#39;re not a robot":
             raise Exception("You need to verify manually that you're not a robot.")
         return soup
