@@ -54,8 +54,9 @@ def get_all_citations():
     paper_uri_template = myconfig.google_scholar_uri + "&cstart=%d&pagesize=%d"
     citation_num_bynow = 0
     continued = False
-    for c in range(0, int(math.ceil(total_citations_num * 1.0 / papers_per_page))):
-        paper_uri = paper_uri_template % (papers_per_page * c, papers_per_page)
+    page_num = 0
+    while True:
+        paper_uri = paper_uri_template % (papers_per_page * page_num, papers_per_page)
         logging.info("Processing GOOGLE_SCHOLAR_URI: " + paper_uri)
         soup = create_soup_by_url(paper_uri)
         paper_records = soup("tr", {"class": 'gsc_a_tr'})
@@ -70,7 +71,6 @@ def get_all_citations():
                     with open(CITATION_FILENAME, "a+") as f:
                         f.write("# %s\n" % paper_title)
                     get_citations_by_paper(citations_anchor['href'], citation_num_perpaper, 0)
-
                 elif citation_num_bynow > citation_num:
                     start_index_curr_paper = citation_num_perpaper - (citation_num_bynow - citation_num)
                     logging.debug('Continue from paper: %s, start index: %d' % (paper_title, start_index_curr_paper))
@@ -78,6 +78,13 @@ def get_all_citations():
                     continued = True
             else:
                 logging.warn("Current paper has not been cited.")
+
+        # has next page?
+        next_button = soup.find('button', {"id": "gsc_bpf_next"})
+        if next_button.attrMap.get("disabled") == "disabled":
+            break
+        else:
+            page_num += 1
 
 
 def get_total_citations_num():
