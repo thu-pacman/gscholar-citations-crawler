@@ -51,7 +51,6 @@ def get_all_citations():
     papers_per_page = 20
     paper_uri_template = myconfig.google_scholar_uri + "&cstart=%d&pagesize=%d"
     citation_num_bynow = 0
-    continued = False
     page_num = 0
     while True:
         paper_uri = paper_uri_template % (papers_per_page * page_num, papers_per_page)
@@ -63,17 +62,15 @@ def get_all_citations():
             logging.info("Processing paper: " + paper_title)
             citations_anchor = p.find('a', {"class": 'gsc_a_ac'})
             if citations_anchor['href']:
-                citation_num_perpaper = int(citations_anchor.getText())
-                citation_num_bynow += citation_num_perpaper
-                if continued:
+                citation_num_curr_paper = int(citations_anchor.getText())
+                citation_num_bynow += citation_num_curr_paper
+                if citation_num_bynow <= citation_num:
+                    continue
+                start_index = citation_num_curr_paper - (citation_num_bynow - citation_num)
+                if start_index == 0:
                     with open(CITATION_FILENAME, "a+") as f:
                         f.write("# %s\n" % paper_title.encode('utf-8'))
-                    get_citations_by_paper(citations_anchor['href'], citation_num_perpaper, 0)
-                elif citation_num_bynow > citation_num:
-                    start_index_curr_paper = citation_num_perpaper - (citation_num_bynow - citation_num)
-                    logging.debug('Continue from paper: %s, start index: %d' % (paper_title, start_index_curr_paper))
-                    get_citations_by_paper(citations_anchor['href'], citation_num_perpaper, start_index_curr_paper)
-                    continued = True
+                get_citations_by_paper(citations_anchor['href'], citation_num_curr_paper, start_index)
             else:
                 logging.warn("Current paper has not been cited.")
 
