@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
-import sys
-import math
-import urllib2
-import requests
-import time
-from BeautifulSoup import BeautifulSoup
 import logging
-import HTMLParser
+import math
 import os.path
+import sys
+import time
+
+import requests
+from bs4 import BeautifulSoup
 
 import myconfig
 
@@ -19,7 +18,6 @@ CITATION_FILENAME = "citation.txt"
 citation_num = 0
 download_num = 0
 
-html_parser = HTMLParser.HTMLParser()
 session = requests.Session()
 
 def get_start_citation_num():
@@ -69,7 +67,7 @@ def get_all_citations():
                 citation_num_bynow += citation_num_perpaper
                 if continued:
                     with open(CITATION_FILENAME, "a+") as f:
-                        f.write("# %s\n" % paper_title)
+                        f.write("# %s\n" % paper_title.encode('utf-8'))
                     get_citations_by_paper(citations_anchor['href'], citation_num_perpaper, 0)
                 elif citation_num_bynow > citation_num:
                     start_index_curr_paper = citation_num_perpaper - (citation_num_bynow - citation_num)
@@ -81,7 +79,7 @@ def get_all_citations():
 
         # has next page?
         next_button = soup.find('button', {"id": "gsc_bpf_next"})
-        if next_button.attrMap.get("disabled") == "disabled":
+        if "disabled" in dict(next_button.attrs):
             break
         else:
             page_num += 1
@@ -117,54 +115,44 @@ def save_citation(citation_record):
     logging.info("Getting formated cite from " + cite_detail_url)
     soup = create_soup_by_url(cite_detail_url)
     global html_parser
-    full_cite = html_parser.unescape(soup.find("div", {"id": "gs_cit0"}).text)
+    full_cite = soup.find("div", {"id": "gs_cit0"}).text
     global citation_num
     citation_num += 1
     with open(CITATION_FILENAME, "a+") as f:
-        f.write("[%d] %s\n" % (citation_num, full_cite))
+        f.write("[%d] %s\n" % (citation_num, full_cite.encode('utf-8')))
     if myconfig.should_download:
         pdf_div = citation_record.find('div', {"class": "gs_ggs gs_fl"})
         if pdf_div:
             download_pdf(pdf_div.a['href'])
 
 
-def download_pdf(pdf_uri):
+def download_pdf(pdf_url):
     global citation_num, download_num
-    pdf = None
     try:
-        pdf = urllib2.urlopen(pdf_uri)
+        res = requests.get(pdf_url)
         with open("%d.pdf" % citation_num, "wb") as mypdf:
-            mypdf.write(pdf.read())
+            mypdf.write(res.content)
         download_num += 1
-        logging.info("Downloaded citation [%d] from link %s " % (citation_num, pdf_uri))
-    except urllib2.URLError as err:
-        logging.error("Can't download link: " + pdf_uri + " Error: " + str(err.reason))
-    finally:
-        if pdf:
-            pdf.close()
+        logging.info("Downloaded citation [%d] from link %s " % (citation_num, pdf_url))
+    except Exception as err:
+        logging.error("Can't download link: " + pdf_url + " Error: " + str(err))
 
 
 def create_soup_by_url(page_url):
     global session
-    page = None
     try:
         time.sleep(SLEEP_INTERVAL)
         res = session.get(page_url, headers=REQUEST_HEADERS)
-        soup = BeautifulSoup(res.content)
-        if soup.h1 and soup.h1.text and soup.h1.text == "Please show you&#39;re not a robot":
+        soup = BeautifulSoup(res.content, "html.parser")
+        if soup.h1 and soup.h1.text == "Please show you&#39;re not a robot":
             raise Exception("You need to verify manually that you're not a robot.")
         return soup
     except Exception as err:
         logging.error("Can't open link: " + page_url + " Error: " + str(err))
         sys.exit(1)
-    finally:
-        if page:
-            page.close()
 
 
 def main():
-    reload(sys)
-    sys.setdefaultencoding('utf-8')
     logging.basicConfig(level=logging.DEBUG)
     get_all_citations()
     logging.info("Found %d citations and download %d files" % (citation_num, download_num))
