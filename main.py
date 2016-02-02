@@ -150,7 +150,7 @@ def create_soup_by_url(page_url):
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     get_all_citations()
     logging.info("Found %d citations and download %d files" % (citation_num, download_num))
 
