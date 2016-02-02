@@ -49,13 +49,12 @@ def get_all_citations():
             "Unexpected start citation number: %d, total citations number: %d" % (citation_num, total_citations_num))
         sys.exit(2)
     papers_per_page = 20
-    paper_uri_template = myconfig.google_scholar_uri + "&cstart=%d&pagesize=%d"
     citation_num_bynow = 0
     page_num = 0
     while True:
-        paper_uri = paper_uri_template % (papers_per_page * page_num, papers_per_page)
-        logging.info("Processing GOOGLE_SCHOLAR_URI: " + paper_uri)
-        soup = create_soup_by_url(paper_uri)
+        params = {"cstart":papers_per_page * page_num, "pagesize":papers_per_page}
+        logging.info("Processing page: " + page_num)
+        soup = create_soup_by_url(myconfig.google_scholar_uri, params)
         paper_records = soup("tr", {"class": 'gsc_a_tr'})
         for p in paper_records:
             paper_title = p.find('a', {"class": "gsc_a_at"}).getText()
@@ -93,24 +92,21 @@ def get_total_citations_num():
 
 
 def get_citations_by_paper(citations_uri, count, start_index):
-    citations_uri_template = citations_uri + "&start=%d"
     for c in range(0, int(math.ceil((count - start_index) / 10.0))):
-        curr_citations_uri = citations_uri_template % (c * 10 + start_index)
-        logging.debug("Processing citations_uri: " + curr_citations_uri)
-        soup = create_soup_by_url(curr_citations_uri)
+        logging.debug("Processing citations_uri: %s, page number: %d" % (citations_uri, c))
+        soup = create_soup_by_url(citations_uri, {"start":c * 10 + start_index})
         for citation_record in soup('div', {"class": "gs_r"}):
             save_citation(citation_record)
 
 
 def save_citation(citation_record):
-    CITE_DETAIL_URL_TEMPLATE = "https://scholar.google.com/scholar?q=info:%(id)s:scholar.google.com/&output=cite"
     cite_anchor = citation_record.find('a', {'class': 'gs_nph', 'href': '#', "role": "button"})
     if not cite_anchor:
         return
     citation_id = cite_anchor['onclick'].split(',')[1][1:-1]
-    cite_detail_url = CITE_DETAIL_URL_TEMPLATE % {"id": citation_id}
-    logging.info("Getting formated cite from " + cite_detail_url)
-    soup = create_soup_by_url(cite_detail_url)
+    logging.info("Getting formated cite from citation id: " + citation_id)
+    params = {"q":"info:%s:scholar.google.com/" % citation_id, "output":"cite"}
+    soup = create_soup_by_url("https://scholar.google.com/scholar", params)
     global html_parser
     full_cite = soup.find("div", {"id": "gs_cit0"}).text
     global citation_num
@@ -135,11 +131,11 @@ def download_pdf(pdf_url):
         logging.error("Can't download link: " + pdf_url + " Error: " + str(err))
 
 
-def create_soup_by_url(page_url):
+def create_soup_by_url(page_url, params=None):
     global session
     try:
         time.sleep(SLEEP_INTERVAL)
-        res = session.get(page_url, headers=REQUEST_HEADERS)
+        res = session.get(page_url, headers=REQUEST_HEADERS, params=params)
         soup = BeautifulSoup(res.content, "html.parser")
         if soup.h1 and soup.h1.text == "Please show you&#39;re not a robot":
             raise Exception("You need to verify manually that you're not a robot.")
