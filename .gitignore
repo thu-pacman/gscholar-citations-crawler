@@ -3,4 +3,10 @@ __pycache__/
 *.py[cod]
 *.ps
 *.pdf
-*.txt
+*.bib
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.bcf

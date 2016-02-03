@@ -12,3 +12,4 @@ $ ./main.py
 * Python 2.7+ or Python 3
   - beautifulsoup4
   - requests
+* Latex if you need final PDF report

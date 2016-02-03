@@ -13,7 +13,7 @@ import myconfig
 
 REQUEST_HEADERS = {"User-Agent": "Innocent Browser", "Accept-Charset": "UTF-8,*;q=0.5"}
 SLEEP_INTERVAL = 60  # sleep in seconds before next request
-CITATION_FILENAME = "citation.txt"
+CITATION_FILENAME = "citation.bib"
 
 citation_num = 0
 download_num = 0
