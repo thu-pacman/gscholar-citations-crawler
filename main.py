@@ -130,7 +130,7 @@ def download_pdf(pdf_url):
     try:
         res = requests.get(pdf_url)
         with open("%d.pdf" % citation_num, "wb") as mypdf:
-            mypdf.write(res.content)
+            mypdf.write(res.content, stream=True, timeout=30)
         download_num += 1
         logging.info("Downloaded [%d] pdf file from link %s " % (citation_num, pdf_url))
     except Exception as err:
@@ -141,7 +141,7 @@ def create_soup_by_url(page_url, params=None):
     global session
     try:
         time.sleep(SLEEP_INTERVAL)
-        res = session.get(page_url, params=params, headers=REQUEST_HEADERS)
+        res = session.get(page_url, params=params, headers=REQUEST_HEADERS, timeout=10)
         res.encoding='utf-8'
         logging.debug("Creating soup for URL: %s" % res.url)
         if res.status_code != 200:
