@@ -140,6 +140,9 @@ def create_soup_by_url(page_url, params=None):
     try:
         time.sleep(SLEEP_INTERVAL)
         res = session.get(page_url, params=params, headers=REQUEST_HEADERS)
+        if res.status_code != 200:
+            logging.debug("Response content: %s" % res.content)
+            raise Exception("Bad response status code %d" % res.status_code)
         logging.debug("Creating soup for URL: %s" % res.url)
         soup = BeautifulSoup(res.content, "html.parser")
         if soup.h1 and soup.h1.text == "Please show you're not a robot":
