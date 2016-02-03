@@ -132,9 +132,9 @@ def download_pdf(pdf_url):
         with open("%d.pdf" % citation_num, "wb") as mypdf:
             mypdf.write(res.content)
         download_num += 1
-        logging.info("Downloaded citation [%d] from link %s " % (citation_num, pdf_url))
+        logging.info("Downloaded [%d] pdf file from link %s " % (citation_num, pdf_url))
     except Exception as err:
-        logging.error("Can't download link: " + pdf_url + " Error: " + str(err))
+        logging.error("Can't download pdf file from link: " + pdf_url + " Error: " + str(err))
 
 
 def create_soup_by_url(page_url, params=None):
