@@ -115,8 +115,10 @@ def save_citation(citation_record):
     soup = create_soup_by_url("https://scholar.google.com" + bib_anchor['href'])
     global citation_num
     citation_num += 1
+    bib_entry = "%% [%d]\n%s" % (citation_num, soup.encode('utf-8'))
+    logging.info(bib_entry.strip())
     with open(CITATION_FILENAME, "a+") as f:
-        f.write("%% [%d]\n%s\n\n" % (citation_num, soup.encode('utf-8')))
+        f.write(bib_entry)
     if myconfig.should_download:
         pdf_div = citation_record.find('div', {"class": "gs_ggs gs_fl"})
         if pdf_div:
@@ -140,11 +142,12 @@ def create_soup_by_url(page_url, params=None):
     try:
         time.sleep(SLEEP_INTERVAL)
         res = session.get(page_url, params=params, headers=REQUEST_HEADERS)
-        if res.status_code != 200:
-            logging.debug("Response content: %s" % res.content)
-            raise Exception("Bad response status code %d" % res.status_code)
+        res.encoding='utf-8'
         logging.debug("Creating soup for URL: %s" % res.url)
-        soup = BeautifulSoup(res.content, "html.parser")
+        if res.status_code != 200:
+            logging.debug("Response text: %s" % res.text)
+            raise Exception("Bad response status code %d" % res.status_code)
+        soup = BeautifulSoup(res.text, "html.parser")
         if soup.h1 and soup.h1.text == "Please show you're not a robot":
             raise Exception("You need to verify manually that you're not a robot.")
         return soup
