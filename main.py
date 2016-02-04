@@ -69,7 +69,7 @@ def get_all_citations():
                 start_index = citation_num_curr_paper - (citation_num_bynow - citation_num)
                 if start_index == 0:
                     with open(CITATION_FILENAME, "a+") as f:
-                        f.write("%%%%%%%%%%%%\n%% %s\n%%%%%%%%%%%%\n" % paper_title.encode('utf-8'))
+                        f.write("%%%%%%%%%%%%\n%% %s\n%%%%%%%%%%%%\n" % paper_title)
                 get_citations_by_paper(citations_anchor['href'], citation_num_curr_paper, start_index)
             else:
                 logging.warn("Current paper has not been cited.")
@@ -115,7 +115,7 @@ def save_citation(citation_record):
     soup = create_soup_by_url("https://scholar.google.com" + bib_anchor['href'])
     global citation_num
     citation_num += 1
-    bib_entry = "%% [%d]\n%s" % (citation_num, soup.encode('utf-8'))
+    bib_entry = "%% [%d]\n%s" % (citation_num, soup.getText())
     logging.info(bib_entry.strip())
     with open(CITATION_FILENAME, "a+") as f:
         f.write(bib_entry)
@@ -142,7 +142,7 @@ def create_soup_by_url(page_url, params=None):
     try:
         time.sleep(SLEEP_INTERVAL)
         res = session.get(page_url, params=params, headers=REQUEST_HEADERS, timeout=10)
-        res.encoding='utf-8'
+        res.encoding='UTF-8'
         logging.debug("Creating soup for URL: %s" % res.url)
         if res.status_code != 200:
             logging.debug("Response text: %s" % res.text)
