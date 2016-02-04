@@ -128,9 +128,9 @@ def save_citation(citation_record):
 def download_pdf(pdf_url):
     global citation_num, download_num
     try:
-        res = requests.get(pdf_url)
+        res = requests.get(pdf_url, stream=True, timeout=30)
         with open("%d.pdf" % citation_num, "wb") as mypdf:
-            mypdf.write(res.content, stream=True, timeout=30)
+            mypdf.write(res.content)
         download_num += 1
         logging.info("Downloaded [%d] pdf file from link %s " % (citation_num, pdf_url))
     except Exception as err:
