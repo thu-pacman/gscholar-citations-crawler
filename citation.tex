@@ -2,6 +2,10 @@
 \usepackage[slantfont,boldfont]{xeCJK}
 \usepackage{fontspec}
 
+\makeatletter
+\renewcommand\@biblabel[1]{\textbullet}
+\makeatother
+
 \begin{document}
 	\nocite{*}
 	\bibliographystyle{unsrt}
