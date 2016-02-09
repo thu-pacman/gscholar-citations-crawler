@@ -23,6 +23,8 @@ session = requests.Session()
 def get_start_citation_num():
     global CITATION_FILENAME
     if not os.path.exists(CITATION_FILENAME):
+        with open(CITATION_FILENAME, 'w+') as f:
+            f.write("% -*-coding: utf-8 -*-\n\n")
         return 0
     with open(CITATION_FILENAME, 'r') as f:
         citation_list = f.readlines()
