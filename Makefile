@@ -5,9 +5,9 @@ all:
 report: citation clean
 
 citation: citation.bib
-	xelatex $@
-	bibtex $@
-	xelatex $@
+	- xelatex $@
+	- bibtex $@
+	- xelatex $@
 
 clean:
 	rm -f *.aux *.log *.out *.bbl *.blg *.bcf
