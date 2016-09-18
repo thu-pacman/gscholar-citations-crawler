@@ -127,6 +127,9 @@ def save_citation(citation_record):
 
 
 def download_pdf(pdf_url):
+    '''
+    helper function to download citation pdf files
+    '''
     global citation_num, download_num
     try:
         res = requests.get(pdf_url, stream=True, timeout=30)
@@ -139,6 +142,9 @@ def download_pdf(pdf_url):
 
 
 def create_soup_by_url(page_url, params=None):
+    '''
+    helper function to create a beautiful soup object with given URL and parameters
+    '''
     global session
     try:
         time.sleep(myconfig.request_interval)
@@ -164,6 +170,7 @@ def main():
         os.mkdir(myconfig.download_dir)
     get_all_citations()
     logging.info("Found %d citations and download %d files" % (citation_num, download_num))
+
 
 if __name__ == "__main__":
     sys.exit(main())
