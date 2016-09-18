@@ -1,5 +1,7 @@
 # google-scholar-citations
-This program allows users to to retrieve all the citations from Google Scholar by specifying the Google Scholar page.
+Want to know who/which journal has cited your work and compile a list?
+
+This program allows you to retrieve all the citations an author has garnered from other scholars via Google Scholar, to store them in a bib file, and optionally, to download the publicly available PDF files associated with those citations.
 
 ## Prerequisite
 * Python 2.7.9+ or Python 3
