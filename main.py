@@ -113,7 +113,7 @@ def save_citation(citation_record):
         logging.debug("BibTex page soup is: %s" % soup.getText())
         logging.warn("No BibTex citation provided for citation: %s" % citation_id)
         return
-    soup = create_soup_by_url("https://scholar.google.com" + bib_anchor['href'])
+    soup = create_soup_by_url(bib_anchor['href'])
     global citation_num
     citation_num += 1
     bib_entry = "%% [%d]\n%s" % (citation_num, soup.getText())
