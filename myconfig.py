@@ -5,3 +5,5 @@ google_scholar_uri = "https://scholar.google.com/citations?user=NMS69lQAAAAJ"
 
 # Download PS/PDF files of all citations iff True
 should_download = True
+# Directory for downloaded citations PS/PDF files
+download_dir = "pdf"

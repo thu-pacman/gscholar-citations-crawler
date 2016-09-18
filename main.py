@@ -131,7 +131,7 @@ def download_pdf(pdf_url):
     global citation_num, download_num
     try:
         res = requests.get(pdf_url, stream=True, timeout=30)
-        with open("%d.pdf" % citation_num, "wb") as mypdf:
+        with open(os.path.join(myconfig.download_dir, "%d.pdf" % citation_num), "wb") as mypdf:
             mypdf.write(res.content)
         download_num += 1
         logging.info("Downloaded [%d] pdf file from link %s " % (citation_num, pdf_url))
@@ -160,9 +160,11 @@ def create_soup_by_url(page_url, params=None):
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
+    if myconfig.should_download and not os.path.exists(myconfig.download_dir):
+        logging.debug("Creating directory %s for holding pdf files" % myconfig.download_dir)
+        os.mkdir(myconfig.download_dir)
     get_all_citations()
     logging.info("Found %d citations and download %d files" % (citation_num, download_num))
-
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -14,3 +14,4 @@ clean:
 
 clobber: clean
 	rm -f *.pdf citation.bib
+	rm -rf pdf/

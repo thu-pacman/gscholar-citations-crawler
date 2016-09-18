@@ -10,3 +10,4 @@ __pycache__/
 *.bbl
 *.blg
 *.bcf
+pdf/
