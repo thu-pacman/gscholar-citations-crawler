@@ -102,7 +102,7 @@ def get_citations_by_paper(citations_uri, count, start_index):
 def save_citation(citation_record):
     cite_anchor = citation_record.find('a', {'class': 'gs_nph', 'href': '#', "role": "button"})
     if not cite_anchor or not cite_anchor['onclick']:
-        logging.warn("No Cite anchor for citation: %s" % citation_id)
+        logging.warn("No Cite anchor for citation: %s" % citation_record)
         return
     citation_id = cite_anchor['onclick'].split(',')[1][1:-1]
     logging.info("Getting formated cite from citation id: " + citation_id)
