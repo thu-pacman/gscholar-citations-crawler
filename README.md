@@ -49,3 +49,6 @@ $ python main.py -h # show this help message and exit
 
 ## Avoid Too Many Requests
 Crawl the web resposibly. We suggest that users set a large number for the --request-interval. Requesting too frequently may result in a block from Google.
+
+## History
+*18-Sep-2016*: Enabled a number of commandline options, updated README
