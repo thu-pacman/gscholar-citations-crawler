@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 
 REQUEST_HEADERS = {"User-Agent": "Innocent Browser", "Accept-Charset": "UTF-8,*;q=0.5"}
 
-parser = argparse.ArgumentParser(description = 'To retrieve all of your citations from Google Scholar.')
+parser = argparse.ArgumentParser(description='To retrieve all of your citations from Google Scholar.')
 parser.add_argument('google_scholar_uri', type=str, help='Your google scholar homepage')
 parser.add_argument('--request-interval', action='store', type=int, default=100,
                     help='Interval (in seconds) between requests to google scholar')
@@ -28,6 +28,7 @@ citation_num = 0
 download_num = 0
 
 session = requests.Session()
+
 
 def get_start_citation_num():
     if not os.path.exists(opts.citation_name):
@@ -46,7 +47,7 @@ def get_start_citation_num():
             return 0
         last_line = citation_list[i].strip()
         logging.debug("find last line: %s" % last_line)
-        start_number = int(last_line[last_line.index('[') + 1 : last_line.index(']')])
+        start_number = int(last_line[last_line.index('[') + 1: last_line.index(']')])
         return start_number
 
 
@@ -63,7 +64,7 @@ def get_all_citations():
     citation_num_bynow = 0
     page_num = 0
     while True:
-        params = {"cstart" : papers_per_page * page_num, "pagesize" : papers_per_page}
+        params = {"cstart": papers_per_page * page_num, "pagesize": papers_per_page}
         logging.info("Processing homepage %s, page number: %d" % (opts.google_scholar_uri, page_num))
         soup = create_soup_by_url(opts.google_scholar_uri, params)
         paper_records = soup("tr", {"class": 'gsc_a_tr'})
@@ -103,7 +104,7 @@ def get_total_citations_num():
 
 def get_citations_by_paper(citations_uri, count, start_index):
     for c in range(0, int(math.ceil((count - start_index) / 10.0))):
-        soup = create_soup_by_url(citations_uri, {"start":c * 10 + start_index})
+        soup = create_soup_by_url(citations_uri, {"start": c * 10 + start_index})
         for citation_record in soup('div', {"class": "gs_r"}):
             save_citation(citation_record)
 
@@ -115,9 +116,9 @@ def save_citation(citation_record):
         return
     citation_id = cite_anchor['onclick'].split(',')[1][1:-1]
     logging.info("Getting formated cite from citation id: " + citation_id)
-    params = {"q":"info:%s:scholar.google.com/" % citation_id, "output":"cite"}
+    params = {"q": "info:%s:scholar.google.com/" % citation_id, "output": "cite"}
     soup = create_soup_by_url("https://scholar.google.com/scholar", params)
-    bib_anchor = soup.find('a', {"class":"gs_citi"})
+    bib_anchor = soup.find('a', {"class": "gs_citi"})
     if not bib_anchor:
         logging.debug("BibTex page soup is: %s" % soup.getText())
         logging.warn("No BibTex citation provided for citation: %s" % citation_id)
@@ -128,7 +129,7 @@ def save_citation(citation_record):
     bib_entry = "%% [%d]\n%s" % (citation_num, soup.getText())
     logging.info(bib_entry.strip())
     with open(opts.citation_name, "a+") as f:
-        f.write(bib_entry)
+        f.write(bib_entry.encode('utf-8'))
     if opts.should_download:
         pdf_div = citation_record.find('div', {"class": "gs_ggs gs_fl"})
         if pdf_div:
@@ -157,7 +158,7 @@ def create_soup_by_url(page_url, params=None):
     try:
         time.sleep(opts.request_interval)
         res = session.get(page_url, params=params, headers=REQUEST_HEADERS, timeout=10)
-        res.encoding='UTF-8'
+        res.encoding = 'UTF-8'
         logging.debug("Creating soup for URL: %s" % res.url)
         if res.status_code != 200:
             logging.debug("Response text: %s" % res.text)
