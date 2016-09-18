@@ -12,7 +12,6 @@ from bs4 import BeautifulSoup
 import myconfig
 
 REQUEST_HEADERS = {"User-Agent": "Innocent Browser", "Accept-Charset": "UTF-8,*;q=0.5"}
-SLEEP_INTERVAL = 100  # sleep in seconds before next request
 CITATION_FILENAME = "citation.bib"
 
 citation_num = 0
@@ -142,7 +141,7 @@ def download_pdf(pdf_url):
 def create_soup_by_url(page_url, params=None):
     global session
     try:
-        time.sleep(SLEEP_INTERVAL)
+        time.sleep(myconfig.request_interval)
         res = session.get(page_url, params=params, headers=REQUEST_HEADERS, timeout=10)
         res.encoding='UTF-8'
         logging.debug("Creating soup for URL: %s" % res.url)
