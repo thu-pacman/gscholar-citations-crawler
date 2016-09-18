@@ -10,6 +10,9 @@ import time
 import requests
 from bs4 import BeautifulSoup
 
+import bibtexparser
+from bibtexparser.bibdatabase import BibDatabase
+
 REQUEST_HEADERS = {"User-Agent": "Innocent Browser", "Accept-Charset": "UTF-8,*;q=0.5"}
 
 parser = argparse.ArgumentParser(description='To retrieve all of your citations from Google Scholar.')
@@ -126,24 +129,33 @@ def save_citation(citation_record):
     soup = create_soup_by_url(bib_anchor['href'])
     global citation_num
     citation_num += 1
-    bib_entry = "%% [%d]\n%s" % (citation_num, soup.getText())
+    # Adding a tag to the bib entry about google scholar citation ID
+    citation_entry = bibtexparser.loads(soup.getText()).entries[0]
+    citationID = citation_entry['ID'] # e.g., melville2004review
+    citation_entry["gscholar_id"] = citation_id
+    db_entry=[]
+    db_entry.append(citation_entry)
+    db = BibDatabase()
+    db.entries = db_entry
+    g_bib_entry = bibtexparser.dumps(db)
+    bib_entry = "%% [%d]\n%s" % (citation_num, g_bib_entry)
     logging.info(bib_entry.strip())
     with open(opts.citation_name, "a+") as f:
-        f.write(bib_entry.encode('utf-8'))
+        f.write(g_bib_entry.encode('utf-8'))
     if opts.should_download:
         pdf_div = citation_record.find('div', {"class": "gs_ggs gs_fl"})
         if pdf_div:
-            download_pdf(pdf_div.a['href'])
+            download_pdf(pdf_div.a['href'], citationID)
 
 
-def download_pdf(pdf_url):
+def download_pdf(pdf_url, citationID):
     '''
     helper function to download citation pdf files
     '''
     global citation_num, download_num
     try:
         res = requests.get(pdf_url, stream=True, timeout=30)
-        with open(os.path.join(opts.download_dir, "%d.pdf" % citation_num), "wb") as mypdf:
+        with open(os.path.join(opts.download_dir, "%d_%s.pdf" % (citation_num, citationID)), "wb") as mypdf:
             mypdf.write(res.content)
         download_num += 1
         logging.info("Downloaded [%d] pdf file from link %s " % (citation_num, pdf_url))
