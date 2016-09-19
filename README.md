@@ -11,7 +11,7 @@ This program allows you to retrieve all the citations an author has garnered fro
 * Latex if you need to produce a final PDF report
 
 ## Download
-To download, either clone/download the repository, or clone it via command line with:
+To download, either directly [download the zip file](https://github.com/shiqiezi/google-scholar-citations/archive/master.zip), or clone the git repository via command line with:
 ```bash
 $ git clone https://github.com/shiqiezi/google-scholar-citations
 ```
