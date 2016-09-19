@@ -141,7 +141,7 @@ def save_citation(citation_record):
     bib_entry = "%% [%d]\n%s" % (citation_num, g_bib_entry)
     logging.info(bib_entry.strip())
     with open(opts.citation_name, "a+") as f:
-        f.write(g_bib_entry.encode('utf-8'))
+        f.write(bib_entry.encode('utf-8'))
     if opts.should_download:
         pdf_div = citation_record.find('div', {"class": "gs_ggs gs_fl"})
         if pdf_div:
